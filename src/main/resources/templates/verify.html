@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Verify Certificate</title>
+  <style>
+    body{margin:0;font-family:system-ui,Arial;background:#0b1220;color:#e5e7eb;display:grid;place-items:center;height:100vh}
+    .card{width:min(640px,92vw);background:#111a2e;border:1px solid #223056;border-radius:16px;padding:22px}
+    input{width:100%;padding:12px;border-radius:12px;border:1px solid #2a3b69;background:#0e162a;color:#e5e7eb}
+    button{margin-top:10px;padding:12px 14px;border:none;border-radius:12px;background:#4f8cff;color:#061024;font-weight:800;cursor:pointer}
+    .ok{margin-top:14px;background:#0f2a1a;border:1px solid #1b6a3f;padding:12px;border-radius:12px}
+    .bad{margin-top:14px;background:#3a1014;border:1px solid #7a1f29;padding:12px;border-radius:12px}
+    small{color:#a9b4cc}
+    code{color:#7fb1ff}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2 style="margin:0 0 10px">Public Certificate Verification</h2>
+    <small>Paste the certificate hash or open the QR URL.</small>
+
+    <form method="get" action="/verify">
+      <input name="hash" placeholder="Enter certificate hash..." required />
+      <button type="submit">Verify</button>
+    </form>
+
+    <div class="ok" th:if="${certificate}">
+      ✅ <b>Valid Certificate</b><br/>
+      Student: <span th:text="${certificate.studentName}">name</span><br/>
+      Course: <span th:text="${certificate.courseName}">course</span><br/>
+      Institution: <span th:text="${certificate.institutionName}">inst</span><br/>
+      Hash: <code th:text="${certificate.certificateHash}">hash</code>
+    </div>
+
+    <div class="bad" th:if="${notFound}">
+      ❌ <b>Certificate NOT FOUND</b><br/>
+      This QR/hash is invalid or not issued by the system.
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard</title>
+  <style>
+    body{margin:0;font-family:system-ui,Arial;background:#0b1220;color:#e5e7eb}
+    header{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid #223056;background:#0e162a}
+    .wrap{padding:18px 22px;max-width:1100px;margin:auto}
+    .card{background:#111a2e;border:1px solid #223056;border-radius:16px;padding:16px}
+    .btn{padding:10px 12px;border-radius:12px;border:1px solid #2a3b69;background:#0e162a;color:#e5e7eb;cursor:pointer;text-decoration:none}
+    .btn:hover{border-color:#4f8cff}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{padding:10px;border-bottom:1px solid #223056;text-align:left;font-size:13px}
+    th{color:#a9b4cc;font-weight:600}
+    code{color:#7fb1ff}
+  </style>
+</head>
+<body>
+<header>
+  <div>
+    <div style="font-weight:800">Admin Dashboard</div>
+    <div style="font-size:12px;color:#a9b4cc">Manage & view certificates</div>
+  </div>
+  <a class="btn" href="/logout">Logout</a>
+</header>
+
+<div class="wrap">
+  <div class="card">
+    <h3 style="margin:0 0 8px">All Certificates</h3>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Course</th>
+          <th>Institution</th>
+          <th>Issue Date</th>
+          <th>Hash</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="c : ${certificates}">
+          <td th:text="${c.studentName}">Student</td>
+          <td th:text="${c.courseName}">Course</td>
+          <td th:text="${c.institutionName}">Institution</td>
+          <td th:text="${c.issueDate}">2026-02-08</td>
+          <td><code th:text="${c.certificateHash}">hash</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>
