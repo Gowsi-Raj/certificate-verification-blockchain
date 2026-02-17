@@ -1,30 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Certificate Verification</title>
     <style>
         body { font-family: Arial; background: #f4f6f8; }
         .card {
             background: white;
-            width: 500px;
+            width: 520px;
             margin: 50px auto;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px #ccc;
         }
         .ok { color: green; font-weight: bold; }
+        .warn { color: orange; font-weight: bold; }
+        .bad { color: red; font-weight: bold; }
     </style>
 </head>
+
 <body>
+
 <div class="card">
-    <h2 class="ok">✅ Certificate Verified</h2>
+
+    <!-- Main message -->
+    <h2 th:text="${resp.message}" class="ok"></h2>
+
+    <!-- Student data -->
     <p><b>Student:</b> <span th:text="${cert.studentName}"></span></p>
     <p><b>Course:</b> <span th:text="${cert.courseName}"></span></p>
     <p><b>Institution:</b> <span th:text="${cert.institutionName}"></span></p>
     <p><b>Issued On:</b> <span th:text="${cert.issueDate}"></span></p>
+
+    <hr>
+
     <p><b>Certificate Hash:</b><br>
         <small th:text="${cert.certificateHash}"></small>
     </p>
+
+    <hr>
+
+    <!-- Blockchain status -->
+    <p>
+        <b>Blockchain:</b>
+        <span th:text="${resp.onChain ? 'Confirmed' : 'Not Found'}"
+              th:class="${resp.onChain ? 'ok' : 'bad'}"></span>
+    </p>
+
+    <!-- Tamper status -->
+    <p>
+        <b>Data Integrity:</b>
+        <span th:text="${resp.tampered ? 'TAMPERED' : 'Intact'}"
+              th:class="${resp.tampered ? 'bad' : 'ok'}"></span>
+    </p>
+
+    <!-- Timestamp -->
+    <p th:if="${resp.timestamp > 0}">
+        <b>Blockchain Timestamp:</b>
+        <span th:text="${resp.timestamp}"></span>
+    </p>
+
 </div>
+
 </body>
 </html>

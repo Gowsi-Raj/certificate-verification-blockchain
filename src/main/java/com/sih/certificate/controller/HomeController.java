@@ -4,10 +4,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
-public class VerificationPageController {
+public class HomeController {
 
-    @GetMapping("/verify")
-    public String verifyPage() {
-        return "verify"; // loads verify.html
+    @GetMapping("/")
+    public String home() {
+        return "index";
     }
 }

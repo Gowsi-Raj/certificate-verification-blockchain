@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <title>Verify by QR</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body{font-family:system-ui;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0b1220;color:#fff}
+    .card{width:min(920px,92vw);padding:24px;border-radius:18px;background:rgba(255,255,255,.06);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12)}
+    h1{margin:0 0 8px}
+    p{opacity:.8;margin:0 0 18px}
+    #reader{border-radius:16px;overflow:hidden}
+    .tip{margin-top:14px;font-size:14px;opacity:.8}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Verify by QR</h1>
+    <p>Point your camera at the certificate QR.</p>
+
+    <div id="reader"></div>
+
+    <div class="tip">
+      If QR contains a URL, it will open it. If it contains only a hash, it will open <b>/verify/{hash}</b>.
+    </div>
+  </div>
+
+<script>
+  const qr = new Html5Qrcode("reader");
+  const config = { fps: 10, qrbox: 280 };
+
+  function go(decodedText){
+    decodedText = (decodedText || "").trim();
+    if (!decodedText) return;
+
+    // if QR contains full url
+    if (decodedText.startsWith("http://") || decodedText.startsWith("https://")) {
+      window.location.href = decodedText;
+      return;
+    }
+
+    // else assume it is a hash
+    window.location.href = "/verify/" + encodeURIComponent(decodedText);
+  }
+
+  Html5Qrcode.getCameras().then(devices => {
+    const camId = devices?.[0]?.id;
+    if(!camId){ alert("No camera found"); return; }
+    qr.start(camId, config, go);
+  }).catch(err => alert("Camera error: " + err));
+</script>
+</body>
+</html>

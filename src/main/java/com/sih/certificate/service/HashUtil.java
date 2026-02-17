@@ -1,13 +1,15 @@
 package com.sih.certificate.service;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
 public class HashUtil {
 
-    public static String sha256(String input) {
+    // SHA256 helper
+    public static String sha256Hex(String input) {
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(input.getBytes("UTF-8"));
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(input.getBytes(StandardCharsets.UTF_8));
 
             StringBuilder hex = new StringBuilder();
             for (byte b : hash) {
@@ -16,7 +18,12 @@ public class HashUtil {
             return hex.toString();
 
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Hash error", e);
         }
+    }
+
+    // normalize text (remove spaces + lowercase)
+    public static String norm(String s) {
+        return s == null ? "" : s.trim().replaceAll("\\s+", "").toLowerCase();
     }
 }

@@ -1,42 +1,231 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Verify Certificate</title>
-  <style>
-    body{margin:0;font-family:system-ui,Arial;background:#0b1220;color:#e5e7eb;display:grid;place-items:center;height:100vh}
-    .card{width:min(640px,92vw);background:#111a2e;border:1px solid #223056;border-radius:16px;padding:22px}
-    input{width:100%;padding:12px;border-radius:12px;border:1px solid #2a3b69;background:#0e162a;color:#e5e7eb}
-    button{margin-top:10px;padding:12px 14px;border:none;border-radius:12px;background:#4f8cff;color:#061024;font-weight:800;cursor:pointer}
-    .ok{margin-top:14px;background:#0f2a1a;border:1px solid #1b6a3f;padding:12px;border-radius:12px}
-    .bad{margin-top:14px;background:#3a1014;border:1px solid #7a1f29;padding:12px;border-radius:12px}
-    small{color:#a9b4cc}
-    code{color:#7fb1ff}
-  </style>
+    <meta charset="UTF-8"/>
+    <title>Public Certificate Verification</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body{
+            font-family: Arial;
+            background:#0b1220;
+            color:#fff;
+            margin:0;
+            padding:0;
+        }
+        .wrap{
+            width:760px;
+            max-width:94vw;
+            margin:24px auto;
+        }
+        .card{
+            background:#111a2e;
+            border-radius:16px;
+            padding:20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.35);
+            margin-bottom:16px;
+        }
+        h1{ margin:0 0 8px 0; font-size:22px; }
+        p{ margin:6px 0 12px 0; color:#cbd5e1; }
+        .row{ display:flex; gap:14px; flex-wrap:wrap; }
+        .left{ flex: 1; min-width:320px; }
+        .right{ flex: 1; min-width:320px; }
+        input{
+            width:100%;
+            padding:12px;
+            border-radius:12px;
+            border:1px solid rgba(255,255,255,.12);
+            background:#0f1730;
+            color:#fff;
+            outline:none;
+            box-sizing:border-box;
+        }
+        button{
+            padding:12px 14px;
+            border-radius:12px;
+            border:0;
+            font-weight:700;
+            cursor:pointer;
+        }
+        .btnPrimary{ background:#38bdf8; color:#001018; }
+        .btnSecondary{ background:#94a3b8; color:#0b1220; }
+        .btnDanger{ background:#f87171; color:#260000; }
+        #reader{
+            width:100%;
+            border-radius:14px;
+            overflow:hidden;
+            border:1px solid rgba(255,255,255,.08);
+            background:#0f1730;
+            padding:10px;
+            box-sizing:border-box;
+        }
+        .result{
+            margin-top:12px;
+            padding:14px;
+            border-radius:14px;
+            border:1px solid rgba(255,255,255,.1);
+            background:#0f1730;
+        }
+        .good{ border-color: rgba(34,197,94,.5); }
+        .bad{ border-color: rgba(239,68,68,.5); }
+        .muted{ color:#cbd5e1; font-size:14px; }
+        a{ color:#38bdf8; text-decoration:none; font-weight:700; }
+    </style>
 </head>
 <body>
-  <div class="card">
-    <h2 style="margin:0 0 10px">Public Certificate Verification</h2>
-    <small>Paste the certificate hash or open the QR URL.</small>
-
-    <form method="get" action="/verify">
-      <input name="hash" placeholder="Enter certificate hash..." required />
-      <button type="submit">Verify</button>
-    </form>
-
-    <div class="ok" th:if="${certificate}">
-      ✅ <b>Valid Certificate</b><br/>
-      Student: <span th:text="${certificate.studentName}">name</span><br/>
-      Course: <span th:text="${certificate.courseName}">course</span><br/>
-      Institution: <span th:text="${certificate.institutionName}">inst</span><br/>
-      Hash: <code th:text="${certificate.certificateHash}">hash</code>
+<div class="wrap">
+    <div class="card">
+        <h1>Public Certificate Verification</h1>
+        <p>Scan QR using camera OR paste hash to verify.</p>
+        <p class="muted"><a href="/">← Back to Home</a></p>
     </div>
 
-    <div class="bad" th:if="${notFound}">
-      ❌ <b>Certificate NOT FOUND</b><br/>
-      This QR/hash is invalid or not issued by the system.
+    <div class="card">
+        <div class="row">
+            <div class="left">
+                <h2 style="margin:0 0 10px 0;">Scan QR</h2>
+                <div id="reader"></div>
+
+                <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="btnSecondary" onclick="startScanner()">Start</button>
+                    <button class="btnDanger" onclick="stopScanner()">Stop</button>
+                    <button class="btnPrimary" onclick="switchCamera()">Switch Camera</button>
+                </div>
+
+                <p class="muted" style="margin-top:10px;">
+                    Tip: Use “Switch Camera” to change front/back.
+                </p>
+            </div>
+
+            <div class="right">
+                <h2 style="margin:0 0 10px 0;">Search by Hash</h2>
+                <input id="hashInput" placeholder="Enter certificate hash"/>
+                <div style="margin-top:12px;">
+                    <button class="btnPrimary" onclick="verifyHash()">Verify</button>
+                </div>
+
+                <div id="resultBox" class="result" style="display:none;"></div>
+
+                <!-- If opened by /verify/{hash} -->
+                <div th:if="${hash != null}" class="result" th:classappend="${res.valid} ? ' good' : ' bad'">
+                    <div><b>Hash:</b> <span th:text="${hash}"></span></div>
+                    <div style="margin-top:6px;">
+                        <b>Status:</b>
+                        <span th:text="${res.valid} ? 'VALID ✅' : 'INVALID ❌'"></span>
+                    </div>
+                    <div style="margin-top:6px;">
+                        <b>Message:</b> <span th:text="${res.message}"></span>
+                    </div>
+                    <div th:if="${res.timestamp != null}" style="margin-top:6px;">
+                        <b>Blockchain Timestamp:</b> <span th:text="${res.timestamp}"></span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </div>
-  </div>
+</div>
+
+<script>
+    let html5QrCode = null;
+    let currentCameraId = null;
+    let cameraIds = [];
+    let cameraIndex = 0;
+
+    async function loadCameras() {
+        const devices = await Html5Qrcode.getCameras();
+        cameraIds = devices.map(d => d.id);
+        if (cameraIds.length > 0) {
+            currentCameraId = cameraIds[0];
+            cameraIndex = 0;
+        }
+    }
+
+    async function startScanner() {
+        try {
+            if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+            if (cameraIds.length === 0) await loadCameras();
+
+            if (!currentCameraId) {
+                alert("No camera found");
+                return;
+            }
+
+            await html5QrCode.start(
+                { deviceId: { exact: currentCameraId } },
+                { fps: 10, qrbox: 240 },
+                (decodedText) => {
+                    // QR should contain .../verify/<hash>
+                    // Extract hash from URL if present
+                    let h = decodedText;
+                    const m = decodedText.match(/\/verify\/([^\/\s]+)$/);
+                    if (m && m[1]) h = m[1];
+
+                    document.getElementById("hashInput").value = h;
+                    verifyHash();
+                }
+            );
+        } catch (e) {
+            console.error(e);
+            alert("Camera start failed: " + e);
+        }
+    }
+
+    async function stopScanner() {
+        try {
+            if (html5QrCode && html5QrCode.isScanning) {
+                await html5QrCode.stop();
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async function switchCamera() {
+        if (cameraIds.length === 0) await loadCameras();
+        if (cameraIds.length < 2) {
+            alert("Only one camera detected");
+            return;
+        }
+
+        await stopScanner();
+
+        cameraIndex = (cameraIndex + 1) % cameraIds.length;
+        currentCameraId = cameraIds[cameraIndex];
+
+        await startScanner();
+    }
+
+    async function verifyHash() {
+        const hash = document.getElementById("hashInput").value.trim();
+        if (!hash) return;
+
+        const box = document.getElementById("resultBox");
+        box.style.display = "block";
+        box.className = "result";
+        box.innerHTML = "Checking...";
+
+        try {
+            const res = await fetch(`/api/verify/${encodeURIComponent(hash)}`);
+            const data = await res.json();
+
+            if (data.valid) box.classList.add("good");
+            else box.classList.add("bad");
+
+            box.innerHTML = `
+                <div><b>Hash:</b> ${hash}</div>
+                <div style="margin-top:6px;"><b>Status:</b> ${data.valid ? "VALID ✅" : "INVALID ❌"}</div>
+                <div style="margin-top:6px;"><b>Message:</b> ${data.message ?? ""}</div>
+                <div style="margin-top:6px;"><b>Blockchain Timestamp:</b> ${data.timestamp ?? ""}</div>
+            `;
+        } catch (e) {
+            console.error(e);
+            box.classList.add("bad");
+            box.innerHTML = "Error verifying. Check server logs.";
+        }
+    }
+
+    // Auto-load cameras
+    loadCameras();
+</script>
 </body>
 </html>

@@ -2,6 +2,7 @@ package com.sih.certificate.service;
 
 import com.sih.certificate.model.User;
 import com.sih.certificate.repository.UserRepository;
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,9 +14,24 @@ public class AuthService {
         this.userRepository = userRepository;
     }
 
+    // Auto-create demo users only if missing (safe)
+    @PostConstruct
+    public void ensureDefaults() {
+        userRepository.findByUsername("admin")
+                .orElseGet(() -> userRepository.save(new User("admin", "admin123", "ADMIN")));
+
+        userRepository.findByUsername("student")
+                .orElseGet(() -> userRepository.save(new User("student", "student123", "STUDENT")));
+    }
+
     public User login(String username, String password) {
-        return userRepository.findByUsername(username)
-                .filter(u -> u.getPassword().equals(password)) // demo only (no hashing)
+        if (username == null || password == null) return null;
+
+        String u = username.trim();
+        String p = password.trim();
+
+        return userRepository.findByUsername(u)
+                .filter(dbUser -> dbUser.getPassword() != null && dbUser.getPassword().trim().equals(p))
                 .orElse(null);
     }
 }

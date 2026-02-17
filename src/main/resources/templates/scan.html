@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Scan QR</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    body{font-family:Arial; margin:0; background:#0b1220; color:#fff;}
+    header{position:sticky; top:0; background:#0b1220; border-bottom:1px solid #1f2a4a; padding:14px 18px; display:flex; justify-content:space-between; align-items:center;}
+    .wrap{max-width:900px; margin:0 auto; padding:18px;}
+    .card{background:#111a2e; padding:16px; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.3);}
+    #video{width:100%; border-radius:14px; background:#000;}
+    .row{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;}
+    button{border:none; padding:12px 14px; border-radius:12px; font-weight:800; cursor:pointer;}
+    .btn1{background:#4f7cff; color:#fff;}
+    .btn2{background:#22c55e; color:#06140a;}
+    .hint{opacity:.75; font-size:12px; margin-top:10px;}
+  </style>
+</head>
+<body>
+
+<header>
+  <b>Verify by QR</b>
+  <a href="/student/login" style="color:#9cc3ff; text-decoration:none;">Back</a>
+</header>
+
+<div class="wrap">
+  <div class="card">
+    <video id="video" autoplay playsinline></video>
+
+    <div class="row">
+      <button class="btn2" id="start">Start (Back Camera)</button>
+      <button class="btn1" id="switch">Switch Camera</button>
+      <button class="btn1" id="stop">Stop</button>
+    </div>
+
+    <div class="hint">
+      Tip: If camera doesn’t open, use HTTPS (ngrok) and allow camera permission.
+    </div>
+  </div>
+</div>
+
+<!-- Lightweight QR decoder -->
+<script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
+
+<script>
+  const video = document.getElementById("video");
+  const startBtn = document.getElementById("start");
+  const switchBtn = document.getElementById("switch");
+  const stopBtn = document.getElementById("stop");
+
+  let stream = null;
+  let useFront = false;
+  let scanning = false;
+
+  async function startCamera() {
+    stopCamera();
+    const constraints = {
+      video: {
+        facingMode: useFront ? "user" : { exact: "environment" }
+      }
+    };
+
+    try {
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
+    } catch (e) {
+      // fallback (some devices don't support exact)
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: useFront ? "user" : "environment" }
+      });
+    }
+
+    video.srcObject = stream;
+    scanning = true;
+    requestAnimationFrame(tick);
+  }
+
+  function stopCamera() {
+    scanning = false;
+    if (stream) {
+      stream.getTracks().forEach(t => t.stop());
+      stream = null;
+    }
+  }
+
+  function tick() {
+    if (!scanning) return;
+
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+      const code = jsQR(img.data, img.width, img.height);
+      if (code && code.data) {
+        stopCamera();
+        // QR contains verify URL => open it
+        window.location.href = code.data;
+        return;
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  startBtn.addEventListener("click", () => {
+    useFront = false;
+    startCamera();
+  });
+
+  switchBtn.addEventListener("click", async () => {
+    useFront = !useFront;
+    await startCamera();
+  });
+
+  stopBtn.addEventListener("click", stopCamera);
+</script>
+
+</body>
+</html>

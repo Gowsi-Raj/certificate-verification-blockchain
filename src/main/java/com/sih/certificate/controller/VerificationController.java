@@ -1,7 +1,7 @@
 package com.sih.certificate.controller;
 
 import com.sih.certificate.dto.VerifyResponse;
-import com.sih.certificate.service.BlockchainService;
+import com.sih.certificate.service.CertificateService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -9,33 +9,35 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 public class VerificationController {
 
-    private final BlockchainService blockchain;
+    private final CertificateService certificateService;
 
-    public VerificationController(BlockchainService blockchain) {
-        this.blockchain = blockchain;
+    public VerificationController(CertificateService certificateService) {
+        this.certificateService = certificateService;
     }
 
-    // ✅ Browser: http://localhost:8081/verify/hello123
+    @GetMapping("/verify")
+    public String verifyPage() {
+        return "scan";
+    }
+
     @GetMapping("/verify/{hash}")
-    public String verifyPage(@PathVariable String hash, Model model) {
-        try {
-            BlockchainService.VerifyResult vr = blockchain.verifyCertificateHash(hash);
+    public String verifyByQr(@PathVariable String hash, Model model) {
 
-            VerifyResponse res;
-            if (!vr.exists() || vr.timestamp() == 0L) {
-                res = new VerifyResponse(false, 0L, "Invalid or Tampered Certificate", hash);
-                model.addAttribute("res", res);
-                return "verify-error";
-            }
+        VerifyResponse resp = certificateService.verifyByHash(hash);
+        model.addAttribute("resp", resp);
 
-            res = new VerifyResponse(true, vr.timestamp(), "Certificate is VALID", hash);
-            model.addAttribute("res", res);
-            return "verify-success";
-
-        } catch (Exception e) {
-            VerifyResponse res = new VerifyResponse(false, 0L, "Blockchain Error: " + e.getMessage(), hash);
-            model.addAttribute("res", res);
+        if (!resp.isValid()) {
             return "verify-error";
         }
+
+        model.addAttribute("cert", resp.getCertificate());
+        return "verify-success";
+    }
+
+    // ✅ API used by UI / Postman
+    @PostMapping("/api/verify")
+    @ResponseBody
+    public VerifyResponse verifyByHash(@RequestParam String hash) {
+        return certificateService.verifyByHash(hash);
     }
 }

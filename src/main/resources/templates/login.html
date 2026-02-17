@@ -1,48 +1,126 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login | Certificate System</title>
+  <title>Login</title>
   <style>
-    body{margin:0;font-family:system-ui,Arial;background:#0b1220;color:#e5e7eb;display:grid;place-items:center;height:100vh}
-    .card{width:min(420px,92vw);background:#111a2e;border:1px solid #223056;border-radius:16px;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
-    h1{margin:0 0 10px;font-size:20px}
-    p{margin:0 0 18px;color:#a9b4cc;font-size:13px;line-height:1.4}
-    label{display:block;margin:10px 0 6px;font-size:13px;color:#cdd6ea}
-    input{width:100%;padding:12px 12px;border-radius:12px;border:1px solid #2a3b69;background:#0e162a;color:#e5e7eb;outline:none}
-    input:focus{border-color:#4f8cff}
-    .row{display:flex;gap:10px;margin-top:16px}
-    button{flex:1;padding:12px;border:none;border-radius:12px;background:#4f8cff;color:#061024;font-weight:700;cursor:pointer}
-    button:hover{filter:brightness(1.05)}
-    .err{margin-top:12px;background:#3a1014;border:1px solid #7a1f29;color:#ffd5d9;padding:10px;border-radius:12px;font-size:13px}
-    .mini{margin-top:14px;color:#a9b4cc;font-size:12px}
-    a{color:#7fb1ff}
+    body{
+      font-family: Arial;
+      margin:0;
+      height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background:#0b1220;
+      color:#fff;
+    }
+    .card{
+      width:520px;
+      background:rgba(17,24,39,.85);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:16px;
+      padding:26px;
+      box-shadow:0 20px 60px rgba(0,0,0,.55);
+    }
+    h1{ margin:0 0 8px; font-size:26px; }
+    .sub{ opacity:.8; margin-bottom:16px; }
+    label{ display:block; margin-top:12px; margin-bottom:6px; opacity:.9; }
+    input{
+      width:100%;
+      padding:12px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.12);
+      background:#0f172a;
+      color:#fff;
+      outline:none;
+    }
+    button{
+      width:100%;
+      margin-top:16px;
+      padding:12px;
+      border-radius:10px;
+      border:none;
+      background:#38bdf8;
+      color:#001018;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .err{
+      margin-top:12px;
+      padding:12px;
+      border-radius:12px;
+      background:#5b1212;
+      border:1px solid #ff6b6b55;
+      color:#ffd3d3;
+      display:none;
+    }
+    .hint{
+      margin-top:12px;
+      opacity:.8;
+      font-size:14px;
+    }
+    a{ color:#7dd3fc; }
   </style>
 </head>
+
 <body>
   <div class="card">
     <h1>Certificate Verification System</h1>
-    <p>Login as <b>ADMIN</b> or <b>STUDENT</b> to view dashboards.</p>
+    <div class="sub">Login as <b>ADMIN</b> or <b>STUDENT</b> to view dashboards.</div>
 
-    <form method="post" action="/login">
-      <label>Username</label>
-      <input name="username" placeholder="admin / student" required />
+    <label>Username</label>
+    <input id="username" placeholder="admin / student" />
 
-      <label>Password</label>
-      <input name="password" type="password" placeholder="password" required />
+    <label>Password</label>
+    <input id="password" type="password" placeholder="password" />
 
-      <div class="row">
-        <button type="submit">Login</button>
-      </div>
+    <button onclick="doLogin()">Login</button>
 
-      <!-- shows error if controller sends model attribute 'error' -->
-      <div class="err" th:if="${error}" th:text="${error}">Invalid username or password</div>
-    </form>
+    <div id="err" class="err"></div>
 
-    <div class="mini">
-      Public verification page: <a href="/verify" target="_blank">/verify</a>
+    <div class="hint">
+      Public verification page: <a href="/verify">/verify</a>
     </div>
   </div>
+
+<script>
+async function doLogin(){
+  const u = document.getElementById("username").value.trim();
+  const p = document.getElementById("password").value;
+
+  const errBox = document.getElementById("err");
+  errBox.style.display = "none";
+  errBox.innerText = "";
+
+  try{
+    const res = await fetch("/api/auth/login", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ username: u, password: p })
+    });
+
+    const data = await res.json();
+
+    if(!data.success){
+      errBox.style.display = "block";
+      errBox.innerText = data.message || "Invalid username or password";
+      return;
+    }
+
+    // role based redirect
+    const role = (data.role || "").toUpperCase();
+    if(role === "ADMIN"){
+      window.location.href = "/admin/dashboard";
+    }else{
+      window.location.href = "/student/dashboard";
+    }
+
+  }catch(e){
+    errBox.style.display = "block";
+    errBox.innerText = "Server error. Check backend running.";
+  }
+}
+</script>
+
 </body>
 </html>

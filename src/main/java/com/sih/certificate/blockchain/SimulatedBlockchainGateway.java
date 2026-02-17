@@ -1,6 +1,7 @@
 package com.sih.certificate.blockchain;
 
 import com.sih.certificate.service.HashUtil;
+
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -29,7 +30,7 @@ public class SimulatedBlockchainGateway implements BlockchainGateway {
         long ts = System.currentTimeMillis();
 
         // include previousHash so chain works
-        String blockHash = HashUtil.sha256(index + "|" + certificateHash + "|" + prevHash + "|" + ts);
+        String blockHash = HashUtil.sha256Hex(index + "|" + certificateHash);
 
         SimBlock b = new SimBlock();
         b.setIndex(index);

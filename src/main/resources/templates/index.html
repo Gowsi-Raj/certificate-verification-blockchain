@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Certificate Verification System</title>
+    <style>
+        body{
+            font-family: Arial;
+            background:#0b1220;
+            color:#fff;
+            height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            margin:0;
+        }
+        .wrap{
+            width:520px;
+            max-width:92vw;
+        }
+        .card{
+            background:#111a2e;
+            border-radius:16px;
+            padding:24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.35);
+            margin-bottom:16px;
+        }
+        .row{
+            display:flex;
+            gap:16px;
+        }
+        .col{
+            flex:1;
+            background:#0f1730;
+            border-radius:14px;
+            padding:18px;
+            border:1px solid rgba(255,255,255,.08);
+        }
+        h1{ margin:0 0 6px 0; font-size:22px; }
+        p{ margin:6px 0 12px 0; color:#cbd5e1; }
+        .btn{
+            display:inline-block;
+            width:100%;
+            text-align:center;
+            padding:12px 14px;
+            border-radius:12px;
+            text-decoration:none;
+            font-weight:700;
+            border:0;
+            cursor:pointer;
+        }
+        .btnAdmin{ background:#38bdf8; color:#001018; }
+        .btnStudent{ background:#a78bfa; color:#100021; }
+        .footer{
+            text-align:center;
+            color:#cbd5e1;
+            font-size:14px;
+        }
+        .footer a{ color:#38bdf8; text-decoration:none; font-weight:700; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="card">
+        <h1>Certificate Verification System</h1>
+        <p>Choose a role to continue.</p>
+
+        <div class="row">
+            <div class="col">
+                <h2 style="margin:0 0 6px 0;">ADMIN</h2>
+                <p>Create certificates, generate QR, and manage records.</p>
+                <a class="btn btnAdmin" href="/admin/login">Go to Admin Login</a>
+            </div>
+
+            <div class="col">
+                <h2 style="margin:0 0 6px 0;">STUDENT</h2>
+                <p>View your certificates and verify using QR/hash.</p>
+                <a class="btn btnStudent" href="/student/login">Go to Student Login</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Public verification page: <a href="/verify">/verify</a>
+    </div>
+</div>
+</body>
+</html>
